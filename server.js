@@ -35,14 +35,14 @@ app.post('/send', (req, res) => {
   const transporter = nodemailer.createTransporter({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER || 'frenzyfact7@gmail.com', // Use environment variable
-      pass: process.env.EMAIL_PASS || 'pkbm snnx ohbo picb', // Use environment variable
+      user: process.env.EMAIL_USER, //environment variable
+      pass: process.env.EMAIL_PASS, //environment variable
     },
   });
 
   const mailOptions = {
-    from: process.env.EMAIL_USER || 'frenzyfact7@gmail.com',
-    to: process.env.RECIPIENT_EMAIL || 'manoj123dhami@gmail.com', // Use environment variable
+    from: process.env.EMAIL_USER,
+    to: process.env.RECIPIENT_EMAIL, // Use environment variable
     subject: `New message from ${name}`,
     html: `
       <h3>New Contact Form Message</h3>
