@@ -4,37 +4,74 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const app = express();
-app.use(cors());
+
+// CORS configuration for production
+app.use(cors({
+  origin: [
+    'http://localhost:3000', // for development
+    'https://your-frontend-domain.vercel.app', // Replace with your actual Vercel domain
+    // Add more domains as needed
+  ],
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
+
 app.use(bodyParser.json());
+
+// Basic route to test if server is running
+app.get('/', (req, res) => {
+  res.json({ message: 'Portfolio Backend Server is running!' });
+});
 
 // Handle the POST request for sending emails
 app.post('/send', (req, res) => {
   const { name, email, message } = req.body;
 
-  const transporter = nodemailer.createTransport({
+  // Basic validation
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  const transporter = nodemailer.createTransporter({
     service: 'gmail',
     auth: {
-      user: 'frenzyfact7@gmail.com', // your Gmail account
-      pass: 'pkbm snnx ohbo picb', // your Gmail password or app password
+      user: process.env.EMAIL_USER || 'frenzyfact7@gmail.com', // Use environment variable
+      pass: process.env.EMAIL_PASS || 'pkbm snnx ohbo picb', // Use environment variable
     },
   });
 
   const mailOptions = {
-    from: email,
-    to: 'manoj123dhami@gmail.com',
+    from: process.env.EMAIL_USER || 'frenzyfact7@gmail.com',
+    to: process.env.RECIPIENT_EMAIL || 'manoj123dhami@gmail.com', // Use environment variable
     subject: `New message from ${name}`,
-    text: message,
+    html: `
+      <h3>New Contact Form Message</h3>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Message:</strong></p>
+      <p>${message}</p>
+    `,
+    replyTo: email
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-        console.error('Error sending email:', error); // Log the error
-        return res.status(500).send('Error sending email');
+        console.error('Error sending email:', error);
+        return res.status(500).json({ error: 'Error sending email' });
     }
-    res.status(200).send('Email sent successfully');
+    console.log('Email sent successfully:', info.response);
+    res.status(200).json({ message: 'Email sent successfully' });
   });
 });
 
-app.listen(3001, () => {
-  console.log('Server started on port 3001');
+// Handle 404 for unknown routes
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Use environment PORT or default to 3001
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
 });
